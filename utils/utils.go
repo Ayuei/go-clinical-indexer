@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"bufio"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func createFilterMap(filterFp string) map[string]bool {
+func CreateFilterMap(filterFp string) map[string]bool {
 	if len(strings.TrimSpace(filterFp)) == 0 {
 		return nil
 	}
@@ -27,8 +27,15 @@ func createFilterMap(filterFp string) map[string]bool {
 
 	for fileScanner.Scan() {
 		filter[strings.TrimSpace(fileScanner.Text())] = true
-		checkError(err, "Cannot convert to integer")
+		CheckError(err, "Cannot convert to integer")
 	}
 
 	return filter
+}
+
+func CheckError(err error, where string, raise ...bool) {
+	if err != nil && raise[0] == true {
+		println(where)
+		panic(err)
+	}
 }

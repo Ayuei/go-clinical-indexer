@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/olivere/elastic/v7"
+	"indexer/utils"
 	"log"
 )
 
@@ -25,10 +26,10 @@ func CreateIndexIfNotExists(es *elastic.Client, index string, delete bool) {
 	if indexExists && delete {
 		log.Print("Index exists, deleting")
 		_, err := es.DeleteIndex(index).Do(context.Background())
-		checkError(err, "Delete Index")
+		utils.CheckError(err, "Delete Index")
 		return
 	}
 
 	_, err = es.CreateIndex(index).BodyString(mappings).Do(context.Background())
-	checkError(err, "Create index")
+	utils.CheckError(err, "Create index")
 }

@@ -1,4 +1,4 @@
-package main
+package structs
 
 import "encoding/xml"
 
@@ -902,4 +902,566 @@ type ClinicalStudy struct {
 type Marco struct {
 	Id   int
 	Text string
+}
+
+type PubMedArticle struct {
+	XMLName        xml.Name `xml:"article"`
+	Text           string   `xml:",chardata"`
+	Mml            string   `xml:"mml,attr"`
+	Xlink          string   `xml:"xlink,attr"`
+	Ali            string   `xml:"ali,attr"`
+	ArticleType    string   `xml:"article-type,attr"`
+	DtdVersion     string   `xml:"dtd-version,attr"`
+	ProcessingMeta struct {
+		Text          string `xml:",chardata"`
+		BaseTagset    string `xml:"base-tagset,attr"`
+		MathmlVersion string `xml:"mathml-version,attr"`
+		TableModel    string `xml:"table-model,attr"`
+		TagsetFamily  string `xml:"tagset-family,attr"`
+		RestrictedBy  string `xml:"restricted-by"` // pmc
+	} `xml:"processing-meta"`
+	Front struct {
+		Text        string `xml:",chardata"`
+		JournalMeta struct {
+			Text      string `xml:",chardata"`
+			JournalID []struct {
+				Text          string `xml:",chardata"` // Trials, Trials
+				JournalIDType string `xml:"journal-id-type,attr"`
+			} `xml:"journal-id"`
+			JournalTitleGroup struct {
+				Text         string `xml:",chardata"`
+				JournalTitle string `xml:"journal-title"` // Trials
+			} `xml:"journal-title-group"`
+			ISSN struct {
+				Text    string `xml:",chardata"` // 1745-6215
+				PubType string `xml:"pub-type,attr"`
+			} `xml:"issn"`
+			Publisher struct {
+				Text          string `xml:",chardata"`
+				PublisherName string `xml:"publisher-name"` // BioMed Central
+				PublisherLoc  string `xml:"publisher-loc"`  // London
+			} `xml:"publisher"`
+		} `xml:"journal-meta"`
+		ArticleMeta struct {
+			Text      string `xml:",chardata"`
+			ArticleID []struct {
+				Text      string `xml:",chardata"` // 35078536, 8790842, 5798, ...
+				PubIDType string `xml:"pub-id-type,attr"`
+			} `xml:"article-id"`
+			ArticleCategories struct {
+				Text      string `xml:",chardata"`
+				SubjGroup struct {
+					Text          string `xml:",chardata"`
+					SubjGroupType string `xml:"subj-group-type,attr"`
+					Subject       string `xml:"subject"` // Study Protocol
+				} `xml:"subj-group"`
+			} `xml:"article-categories"`
+			TitleGroup struct {
+				Text         string `xml:",chardata"`
+				ArticleTitle string `xml:"article-title"` // Understanding and restori...
+			} `xml:"title-group"`
+			ContribGroup struct {
+				Text    string `xml:",chardata"`
+				Contrib []struct {
+					Text        string `xml:",chardata"`
+					ContribType string `xml:"contrib-type,attr"`
+					Corresp     string `xml:"corresp,attr"`
+					ContribID   struct {
+						Text          string `xml:",chardata"` // http://orcid.org/0000-000...
+						ContribIDType string `xml:"contrib-id-type,attr"`
+					} `xml:"contrib-id"`
+					Name struct {
+						Text       string `xml:",chardata"`
+						Surname    string `xml:"surname"`     // Ledermann, von Känel, Be...
+						GivenNames string `xml:"given-names"` // K., R., C., H., M., J., E...
+					} `xml:"name"`
+					Address struct {
+						Text  string `xml:",chardata"`
+						Email string `xml:"email"` // katharina.ledermann@unifr...
+					} `xml:"address"`
+					Xref []struct {
+						Text    string `xml:",chardata"` // 1, 2, 1, 3, 4, 2, 5, 6, 2...
+						RefType string `xml:"ref-type,attr"`
+						Rid     string `xml:"rid,attr"`
+					} `xml:"xref"`
+				} `xml:"contrib"`
+				Aff []struct {
+					Text            string `xml:",chardata"` // Zurich, Switzerland, Rue ...
+					ID              string `xml:"id,attr"`
+					Label           string `xml:"label"` // 1, 2, 3, 4, 5, 6
+					InstitutionWrap struct {
+						Text          string `xml:",chardata"`
+						InstitutionID []struct {
+							Text              string `xml:",chardata"` // grid.7400.3, 0000 0004 19...
+							InstitutionIDType string `xml:"institution-id-type,attr"`
+						} `xml:"institution-id"`
+						Institution []string `xml:"institution"` // Department for Consultati...
+					} `xml:"institution-wrap"`
+				} `xml:"aff"`
+			} `xml:"contrib-group"`
+			PubDate []struct {
+				Text    string `xml:",chardata"`
+				PubType string `xml:"pub-type,attr"`
+				Day     string `xml:"day"`   // 1, 1
+				Month   string `xml:"month"` // 12, 12
+				Year    string `xml:"year"`  // 2021, 2021, 2021
+			} `xml:"pub-date"`
+			Volume      string `xml:"volume"`       // 22
+			ElocationID string `xml:"elocation-id"` // 864
+			History     struct {
+				Text string `xml:",chardata"`
+				Date []struct {
+					Text     string `xml:",chardata"`
+					DateType string `xml:"date-type,attr"`
+					Day      string `xml:"day"`   // 23, 4
+					Month    string `xml:"month"` // 6, 11
+					Year     string `xml:"year"`  // 2021, 2021
+				} `xml:"date"`
+			} `xml:"history"`
+			Permissions struct {
+				Text               string `xml:",chardata"`
+				CopyrightStatement string `xml:"copyright-statement"` // © The Author(s). 2021
+				License            struct {
+					Text       string `xml:",chardata"`
+					LicenseRef struct {
+						Text        string `xml:",chardata"` // https://creativecommons.o...
+						SpecificUse string `xml:"specific-use,attr"`
+						ContentType string `xml:"content-type,attr"`
+					} `xml:"license_ref"`
+					LicenseP struct {
+						Text    string `xml:",chardata"` // This article is licensed ...
+						Bold    string `xml:"bold"`      // Open Access
+						ExtLink []struct {
+							Text        string `xml:",chardata"` // http://creativecommons.or...
+							ExtLinkType string `xml:"ext-link-type,attr"`
+							Href        string `xml:"href,attr"`
+						} `xml:"ext-link"`
+					} `xml:"license-p"`
+				} `xml:"license"`
+			} `xml:"permissions"`
+			Abstract struct {
+				Text string `xml:",chardata"`
+				ID   string `xml:"id,attr"`
+				Sec  []struct {
+					Text  string `xml:",chardata"`
+					Title string `xml:"title"` // Background, Methods, Disc...
+					P     struct {
+						Text    string   `xml:",chardata"` // Fibromyalgia (FM) is a ve...
+						ID      string   `xml:"id,attr"`
+						Italic  []string `xml:"italic"` // N, N, N, N
+						ExtLink []struct {
+							Text        string `xml:",chardata"` // ClinicalTrials.gov, NCT 0...
+							ExtLinkType string `xml:"ext-link-type,attr"`
+							Href        string `xml:"href,attr"`
+						} `xml:"ext-link"`
+					} `xml:"p"`
+				} `xml:"sec"`
+			} `xml:"abstract"`
+			KwdGroup struct {
+				Text  string   `xml:",chardata"`
+				Lang  string   `xml:"lang,attr"`
+				Title string   `xml:"title"` // Keywords
+				Kwd   []string `xml:"kwd"`   // Fibromyalgia, Mindfulness...
+			} `xml:"kwd-group"`
+			FundingGroup struct {
+				Text       string `xml:",chardata"`
+				AwardGroup struct {
+					Text          string `xml:",chardata"`
+					FundingSource struct {
+						Text            string `xml:",chardata"`
+						InstitutionWrap struct {
+							Text          string `xml:",chardata"`
+							InstitutionID struct {
+								Text              string `xml:",chardata"` // http://dx.doi.org/10.1303...
+								InstitutionIDType string `xml:"institution-id-type,attr"`
+							} `xml:"institution-id"`
+							Institution string `xml:"institution"` // Schweizerischer Nationalf...
+						} `xml:"institution-wrap"`
+					} `xml:"funding-source"`
+					AwardID string `xml:"award-id"` // 325130-182766/1
+				} `xml:"award-group"`
+			} `xml:"funding-group"`
+			CustomMetaGroup struct {
+				Text       string `xml:",chardata"`
+				CustomMeta struct {
+					Text      string `xml:",chardata"`
+					MetaName  string `xml:"meta-name"`  // issue-copyright-statement...
+					MetaValue string `xml:"meta-value"` // © The Author(s) 2021
+				} `xml:"custom-meta"`
+			} `xml:"custom-meta-group"`
+		} `xml:"article-meta"`
+	} `xml:"front"`
+	Body struct {
+		Text string `xml:",chardata"`
+		Sec  []struct {
+			Text  string `xml:",chardata"`
+			ID    string `xml:"id,attr"`
+			Title string `xml:"title"` // Administrative informatio...
+			P     []struct {
+				Text      string `xml:",chardata"` // Note: the numbers in curl...
+				ID        string `xml:"id,attr"`
+				TableWrap struct {
+					Text  string `xml:",chardata"`
+					ID    string `xml:"id,attr"`
+					Table struct {
+						Text  string `xml:",chardata"`
+						Frame string `xml:"frame,attr"`
+						Rules string `xml:"rules,attr"`
+						Tbody struct {
+							Text string `xml:",chardata"`
+							Tr   []struct {
+								Text string `xml:",chardata"`
+								Td   []struct {
+									Text string `xml:",chardata"` // Title {1}, Trial registra...
+									P    []struct {
+										Text    string `xml:",chardata"` // Understanding and restori...
+										ExtLink []struct {
+											Text        string `xml:",chardata"` // ClinicalTrials.gov, https...
+											ExtLinkType string `xml:"ext-link-type,attr"`
+											Href        string `xml:"href,attr"`
+										} `xml:"ext-link"`
+										Sup    []string `xml:"sup"`    // 1,2, 1, 3, 4, 2, 5, 6, 2,...
+										Italic string   `xml:"italic"` // .
+									} `xml:"p"`
+								} `xml:"td"`
+							} `xml:"tr"`
+						} `xml:"tbody"`
+					} `xml:"table"`
+				} `xml:"table-wrap"`
+				Xref []struct {
+					Text    string `xml:",chardata"` // 1, 1, 49, 26, 31, 61, 26,...
+					Rid     string `xml:"rid,attr"`
+					RefType string `xml:"ref-type,attr"`
+				} `xml:"xref"`
+				Fig struct {
+					Text    string `xml:",chardata"`
+					ID      string `xml:"id,attr"`
+					Label   string `xml:"label"` // Fig. 1
+					Caption struct {
+						Text string `xml:",chardata"`
+						P    string `xml:"p"` // Flowchart of the interven...
+					} `xml:"caption"`
+					Graphic struct {
+						Text string `xml:",chardata"`
+						Href string `xml:"href,attr"`
+						ID   string `xml:"id,attr"`
+					} `xml:"graphic"`
+				} `xml:"fig"`
+				ExtLink struct {
+					Text        string `xml:",chardata"` // ClinicalTrials.gov
+					ExtLinkType string `xml:"ext-link-type,attr"`
+					Href        string `xml:"href,attr"`
+				} `xml:"ext-link"`
+			} `xml:"p"`
+			Sec []struct {
+				Text  string `xml:",chardata"`
+				ID    string `xml:"id,attr"`
+				Title string `xml:"title"` // Background and rationale ...
+				P     []struct {
+					Text string `xml:",chardata"` // Fibromyalgia (FM) is a ch...
+					ID   string `xml:"id,attr"`
+					Xref []struct {
+						Text    string `xml:",chardata"` // 72, 67, 47, 58, 6, 13, 17...
+						RefType string `xml:"ref-type,attr"`
+						Rid     string `xml:"rid,attr"`
+					} `xml:"xref"`
+					Italic []string `xml:"italic"` // N, N, ., N, N, T, N, N, d...
+					List   struct {
+						Text     string `xml:",chardata"`
+						ListType string `xml:"list-type,attr"`
+						ListItem []struct {
+							Text string `xml:",chardata"`
+							P    struct {
+								Text string `xml:",chardata"` // To compare the 18F-DOPA i...
+								ID   string `xml:"id,attr"`
+							} `xml:"p"`
+						} `xml:"list-item"`
+					} `xml:"list"`
+					Sup     string `xml:"sup"` // 2
+					ExtLink struct {
+						Text        string `xml:",chardata"` // https://www.sealedenvelop...
+						ExtLinkType string `xml:"ext-link-type,attr"`
+						Href        string `xml:"href,attr"`
+					} `xml:"ext-link"`
+					Bold      string `xml:"bold"` // (
+					TableWrap struct {
+						Text    string `xml:",chardata"`
+						ID      string `xml:"id,attr"`
+						Label   string `xml:"label"` // Table 2
+						Caption struct {
+							Text string `xml:",chardata"`
+							P    string `xml:"p"` // Schedule of enrollment, i...
+						} `xml:"caption"`
+						Table struct {
+							Text  string `xml:",chardata"`
+							Frame string `xml:"frame,attr"`
+							Rules string `xml:"rules,attr"`
+							Thead struct {
+								Text string `xml:",chardata"`
+								Tr   []struct {
+									Text string `xml:",chardata"`
+									Th   []struct {
+										Text string `xml:",chardata"` // From June 2021, > 1 d...
+										Bold struct {
+											Text   string `xml:",chardata"`
+											Italic string `xml:"italic"` // -t, t, t, T, T
+										} `xml:"bold"`
+										Sub struct {
+											Text string `xml:",chardata"`
+											Bold struct {
+												Text   string `xml:",chardata"`
+												Italic string `xml:"italic"` // 1, 1, 2, 3
+											} `xml:"bold"`
+										} `xml:"sub"`
+										Sup struct {
+											Text string `xml:",chardata"`
+											Bold string `xml:"bold"` // 0
+										} `xml:"sup"`
+									} `xml:"th"`
+								} `xml:"tr"`
+							} `xml:"thead"`
+							Tbody struct {
+								Text string `xml:",chardata"`
+								Tr   []struct {
+									Text string `xml:",chardata"`
+									Td   []struct {
+										Text string `xml:",chardata"`
+										Bold struct {
+											Text   string `xml:",chardata"` // Enrolment, Information sc...
+											Italic string `xml:"italic"`    // F-DOPA PET scan, MR scan,...
+										} `xml:"bold"`
+										P []struct {
+											Text string `xml:",chardata"`
+											Bold struct {
+												Text   string `xml:",chardata"`
+												Italic string `xml:"italic"` // Medical history, Clinical...
+											} `xml:"bold"`
+										} `xml:"p"`
+									} `xml:"td"`
+								} `xml:"tr"`
+							} `xml:"tbody"`
+						} `xml:"table"`
+					} `xml:"table-wrap"`
+				} `xml:"p"`
+				Sec []struct {
+					Text  string `xml:",chardata"`
+					ID    string `xml:"id,attr"`
+					Title struct {
+						Text string `xml:",chardata"` // Main primary outcome, Mai...
+						Xref struct {
+							Text    string `xml:",chardata"` // 5
+							RefType string `xml:"ref-type,attr"`
+							Rid     string `xml:"rid,attr"`
+						} `xml:"xref"`
+					} `xml:"title"`
+					P []struct {
+						Text string `xml:",chardata"` // 1) A.18F-DOPA influx: the...
+						ID   string `xml:"id,attr"`
+						Xref []struct {
+							Text    string `xml:",chardata"` // 70, 15, 15, 70, 70, 18, 4...
+							RefType string `xml:"ref-type,attr"`
+							Rid     string `xml:"rid,attr"`
+						} `xml:"xref"`
+						List struct {
+							Text     string `xml:",chardata"`
+							ListType string `xml:"list-type,attr"`
+							ListItem []struct {
+								Text  string `xml:",chardata"`
+								Label string `xml:"label"` // 2), 3), 4), 5)
+								P     []struct {
+									Text string `xml:",chardata"` // The percent BOLD signal c...
+									ID   string `xml:"id,attr"`
+									Xref []struct {
+										Text    string `xml:",chardata"` // 62, 48, 43, 7, 14, 51
+										RefType string `xml:"ref-type,attr"`
+										Rid     string `xml:"rid,attr"`
+									} `xml:"xref"`
+								} `xml:"p"`
+							} `xml:"list-item"`
+						} `xml:"list"`
+						Italic  string `xml:"italic"` // Pain severity and functio...
+						ExtLink struct {
+							Text        string `xml:",chardata"` // https://www.ncbi.nlm.nih....
+							ExtLinkType string `xml:"ext-link-type,attr"`
+							Href        string `xml:"href,attr"`
+						} `xml:"ext-link"`
+						Fig struct {
+							Text    string `xml:",chardata"`
+							ID      string `xml:"id,attr"`
+							Label   string `xml:"label"` // Fig. 2
+							Caption struct {
+								Text string `xml:",chardata"`
+								P    string `xml:"p"` // The reward task wheel of ...
+							} `xml:"caption"`
+							Graphic struct {
+								Text string `xml:",chardata"`
+								Href string `xml:"href,attr"`
+								ID   string `xml:"id,attr"`
+							} `xml:"graphic"`
+						} `xml:"fig"`
+					} `xml:"p"`
+					Sec []struct {
+						Text  string `xml:",chardata"`
+						ID    string `xml:"id,attr"`
+						Title string `xml:"title"` // Main outcome 18F-DOPA, Ma...
+						P     struct {
+							Text string `xml:",chardata"` // State-of-the-art image pr...
+							ID   string `xml:"id,attr"`
+							Xref []struct {
+								Text    string `xml:",chardata"` // 8, 9, 55
+								RefType string `xml:"ref-type,attr"`
+								Rid     string `xml:"rid,attr"`
+							} `xml:"xref"`
+							Italic  []string `xml:"italic"` // T, T, f, r, z, z, Z, T-
+							ExtLink []struct {
+								Text        string `xml:",chardata"` // http://surfer.nmr.mgh.har...
+								ExtLinkType string `xml:"ext-link-type,attr"`
+								Href        string `xml:"href,attr"`
+							} `xml:"ext-link"`
+							Sup string `xml:"sup"` // 3
+						} `xml:"p"`
+					} `xml:"sec"`
+				} `xml:"sec"`
+			} `xml:"sec"`
+			TableWrap struct {
+				Text    string `xml:",chardata"`
+				ID      string `xml:"id,attr"`
+				Label   string `xml:"label"` // Table 1
+				Caption struct {
+					Text string `xml:",chardata"`
+					P    string `xml:"p"` // Questionnaires at assessm...
+				} `xml:"caption"`
+				Table struct {
+					Text  string `xml:",chardata"`
+					Frame string `xml:"frame,attr"`
+					Rules string `xml:"rules,attr"`
+					Thead struct {
+						Text string `xml:",chardata"`
+						Tr   struct {
+							Text string   `xml:",chardata"`
+							Th   []string `xml:"th"` // Variables, T0, T1, T2, T3...
+						} `xml:"tr"`
+					} `xml:"thead"`
+					Tbody struct {
+						Text string `xml:",chardata"`
+						Tr   []struct {
+							Text string `xml:",chardata"`
+							Td   []struct {
+								Text    string `xml:",chardata"` // Demographics: for example...
+								Colspan string `xml:"colspan,attr"`
+								Bold    string `xml:"bold"` // Sociodemographic and medi...
+								Xref    struct {
+									Text    string `xml:",chardata"` // 6, 59, 62, 9, 3, 12, 41, ...
+									RefType string `xml:"ref-type,attr"`
+									Rid     string `xml:"rid,attr"`
+								} `xml:"xref"`
+							} `xml:"td"`
+						} `xml:"tr"`
+					} `xml:"tbody"`
+				} `xml:"table"`
+			} `xml:"table-wrap"`
+		} `xml:"sec"`
+	} `xml:"body"`
+	Back struct {
+		Text     string `xml:",chardata"`
+		Glossary struct {
+			Text    string `xml:",chardata"`
+			Title   string `xml:"title"` // Abbreviations
+			DefList struct {
+				Text    string `xml:",chardata"`
+				DefItem []struct {
+					Text string `xml:",chardata"`
+					Term string `xml:"term"` // AA, AE, BDI, BPI, CAR, CB...
+					Def  struct {
+						Text string `xml:",chardata"`
+						P    struct {
+							Text string `xml:",chardata"` // Ambulatory assessment, Ad...
+							ID   string `xml:"id,attr"`
+						} `xml:"p"`
+					} `xml:"def"`
+				} `xml:"def-item"`
+			} `xml:"def-list"`
+		} `xml:"glossary"`
+		FnGroup struct {
+			Text string `xml:",chardata"`
+			Fn   struct {
+				Text string `xml:",chardata"`
+				P    []struct {
+					Text string `xml:",chardata"` // Springer Nature remains n...
+					Bold string `xml:"bold"`      // Publisher’s Note
+				} `xml:"p"`
+			} `xml:"fn"`
+		} `xml:"fn-group"`
+		Ack struct {
+			Text  string `xml:",chardata"`
+			Title string `xml:"title"` // Acknowledgements
+			P     string `xml:"p"`     // None.
+			Sec   []struct {
+				Text  string `xml:",chardata"`
+				ID    string `xml:"id,attr"`
+				Title string `xml:"title"` // Authors’ contributions ...
+				P     struct {
+					Text string `xml:",chardata"` // The trial was designed an...
+					ID   string `xml:"id,attr"`
+				} `xml:"p"`
+			} `xml:"sec"`
+		} `xml:"ack"`
+		Notes struct {
+			Text  string `xml:",chardata"`
+			Title string `xml:"title"` // Declarations
+			Notes []struct {
+				Text      string `xml:",chardata"`
+				ID        string `xml:"id,attr"`
+				NotesType string `xml:"notes-type,attr"`
+				Title     string `xml:"title"` // Ethics approval and conse...
+				P         struct {
+					Text string `xml:",chardata"` // Ethics approval was taken...
+					ID   string `xml:"id,attr"`
+				} `xml:"p"`
+			} `xml:"notes"`
+		} `xml:"notes"`
+		RefList struct {
+			Text  string `xml:",chardata"`
+			ID    string `xml:"id,attr"`
+			Title string `xml:"title"` // References
+			Ref   []struct {
+				Text            string `xml:",chardata"`
+				ID              string `xml:"id,attr"`
+				Label           string `xml:"label"` // 1., 2., 3., 4., 5., 6., 7...
+				ElementCitation struct {
+					Text            string `xml:",chardata"`
+					PublicationType string `xml:"publication-type,attr"`
+					PersonGroup     []struct {
+						Text            string `xml:",chardata"`
+						PersonGroupType string `xml:"person-group-type,attr"`
+						Name            []struct {
+							Text       string `xml:",chardata"`
+							Surname    string `xml:"surname"`     // Aman, Jason, Kaye, Urman,...
+							GivenNames string `xml:"given-names"` // M, Y, A, R, RA, GT, J, J,...
+							Suffix     string `xml:"suffix"`      // Jr, Jr, Jr, 2nd
+						} `xml:"name"`
+						Etal   string `xml:"etal"`
+						Collab string `xml:"collab"` // Group, W
+					} `xml:"person-group"`
+					ArticleTitle string `xml:"article-title"` // Evidence-based non-pharma...
+					Source       string `xml:"source"`        // Curr Pain Headache Rep, A...
+					Year         string `xml:"year"`          // 2018, 2006, 2010, 1961, 2...
+					Volume       string `xml:"volume"`        // 22, 13, 66, 4, 38, 2012, ...
+					Issue        string `xml:"issue"`         // 5, 1, 1, 6, 4, 7, 1, 2, 7...
+					Fpage        string `xml:"fpage"`         // 33, 27, 149, 561, 3080, 4...
+					PubID        []struct {
+						Text      string `xml:",chardata"` // 10.1007/s11916-018-0688-2...
+						PubIDType string `xml:"pub-id-type,attr"`
+					} `xml:"pub-id"`
+					Lpage         string `xml:"lpage"`          // 45, 160, 571, 3088, 42611...
+					PublisherLoc  string `xml:"publisher-loc"`  // New York, Durham (NC), Be...
+					PublisherName string `xml:"publisher-name"` // Guilford Press, Duke Univ...
+				} `xml:"element-citation"`
+				MixedCitation struct {
+					Text            string `xml:",chardata"` // Berding G, Burchert W, va...
+					PublicationType string `xml:"publication-type,attr"`
+				} `xml:"mixed-citation"`
+			} `xml:"ref"`
+		} `xml:"ref-list"`
+	} `xml:"back"`
 }

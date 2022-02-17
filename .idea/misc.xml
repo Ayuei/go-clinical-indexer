@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="UnattendedHostPersistenceState">
+    <option name="openedFilesInfos">
+      <list>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="47193" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/structs/structs.go" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="764" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/utils/utils.go" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="21" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/indexer.go" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="45" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/go.mod" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="2310" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/consumers/consumer.go" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="2395" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/main.go" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="1397" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/producers/producer.go" />
+        </OpenedFileInfo>
+      </list>
+    </option>
+  </component>
+</project>
