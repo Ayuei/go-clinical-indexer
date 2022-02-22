@@ -159,10 +159,10 @@ func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditCommen
 
 			utils.CheckError(err, "Unmarshal")
 
-			fmt.Println("Record", r)
+			fmt.Println(r)
+
 			jobs <- r
 			pbn.Add(1)
-
 		}
 	}
 
