@@ -119,6 +119,8 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 
 			utils.CheckError(err, "Unmarshal")
 
+			fmt.Println(r)
+
 			jobs <- r
 			pbn.Add(1)
 
