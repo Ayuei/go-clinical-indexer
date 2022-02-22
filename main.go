@@ -59,6 +59,7 @@ func main() {
 		consumer = consumers.ParsePubmed
 	} else if *DocType == "bioreddit_submissions"{
 		jobs := make(chan csvs.BioRedditSubmissions)
+		wg.Add(1)
 		go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg)
 		for i := 0; i < *NumWorkers; i++ {
 			fmt.Printf("Started Worker")
@@ -69,6 +70,7 @@ func main() {
 		wg.Wait()
 	} else if *DocType == "bioreddit_comments" {
 		jobs := make(chan csvs.BioRedditComments)
+		wg.Add(1)
 		go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg)
 		for i := 0; i < *NumWorkers; i++ {
 			fmt.Printf("Started Worker")
@@ -96,13 +98,14 @@ func main() {
 
 				wg.Add(1)
 			}
-			wg.Wait()
 		} else {
 			//panic("No consumer created")
 		}
 	} else {
 		//panic("No producer created")
 	}
+
+	wg.Wait()
 
 	err = p.Flush()
 	utils.CheckError(err, "flush")
