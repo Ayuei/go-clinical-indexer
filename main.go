@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/olivere/elastic/v7"
 	"indexer/consumers"
 	"indexer/producers"
@@ -59,11 +60,24 @@ func main() {
 	} else if *DocType == "bioreddit_submissions"{
 		jobs := make(chan csvs.BioRedditSubmissions)
 		go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg)
-		go consumers.ParseBioRedditSubmission(jobs, *elasticIndex, p,  &wg, filter, *exclude)
+		for i := 0; i < *NumWorkers; i++ {
+			fmt.Printf("Started Worker")
+			go consumers.ParseBioRedditSubmission(jobs, *elasticIndex, p,  &wg, filter, *exclude)
+
+			wg.Add(1)
+		}
+		wg.Wait()
 	} else if *DocType == "bioreddit_comments" {
 		jobs := make(chan csvs.BioRedditComments)
 		go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg)
-		go consumers.ParseBioRedditComment(jobs, *elasticIndex, p, &wg, filter, *exclude)
+		for i := 0; i < *NumWorkers; i++ {
+			fmt.Printf("Started Worker")
+			go consumers.ParseBioRedditComment(jobs, *elasticIndex, p, &wg, filter, *exclude)
+
+			wg.Add(1)
+		}
+
+		wg.Wait()
 	} else {
 		panic("Unable to find valid document type")
 	}
@@ -82,14 +96,13 @@ func main() {
 
 				wg.Add(1)
 			}
+			wg.Wait()
 		} else {
 			//panic("No consumer created")
 		}
 	} else {
 		//panic("No producer created")
 	}
-
-	wg.Wait()
 
 	err = p.Flush()
 	utils.CheckError(err, "flush")
