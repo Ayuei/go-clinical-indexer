@@ -91,7 +91,7 @@ func GenericProducer(dataPath string, jobs chan string, wg *sync.WaitGroup) {
 func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSubmissions, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	glob, err := filepath.Glob(dataPath+"/*.csv")
+	glob, err := filepath.Glob(dataPath+"/*.csv*")
 	fmt.Println("Found", len(glob), "files...")
 	pbn := pb.StartNew(len(glob))
 	utils.CheckError(err, "Glob")
@@ -108,14 +108,14 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 		//dec, err := csvutil.NewDecoder(csvReader)
 		utils.CheckError(err, "Decoding file")
 
-
 		var records []csvs.BioRedditSubmissions
 		if err := csvutil.Unmarshal(csvReader, &records); err != nil {
 			fmt.Println("error:", err)
 		}
 
-		for _, u := range records {
-			fmt.Printf("%+v\n", u)
+		for _, r := range records {
+			fmt.Printf("%+v\n", r)
+			jobs <- r
 		}
 
 		//r := csvs.BioRedditSubmissions{}
