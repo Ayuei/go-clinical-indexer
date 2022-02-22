@@ -6,6 +6,7 @@ import (
 	"github.com/olivere/elastic/v7"
 	"indexer/consumers"
 	"indexer/producers"
+	"indexer/structs/csvs"
 	"indexer/utils"
 	"strconv"
 	"sync"
@@ -37,7 +38,7 @@ func main() {
 	utils.CheckError(err, "bulk")
 	CreateIndexIfNotExists(client, *elasticIndex, *Delete)
 
-	jobs := make(chan string, 10000)
+	filter := utils.CreateFilterMap(*filterFp)
 
 	var wg sync.WaitGroup
 	var producer func(string, chan string, *sync.WaitGroup)
@@ -52,29 +53,40 @@ func main() {
 	} else if *DocType == "test-trials" {
 		producer = producers.ProduceTestClinicalTrials //("/home/vin/Projects/CDS_2021/index/raw_data/*/*.xml", jobs, &wg)
 		consumer = consumers.ParseTestClinicalDocument
-	} else if *DocType == "generic" {
+	} else if *DocType == "pubmed" {
 		producer = producers.GenericProducer
 		consumer = consumers.ParsePubmed
+	} else if *DocType == "bioreddit_submissions"{
+		jobs := make(chan csvs.BioRedditSubmissions)
+		go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg)
+		go consumers.ParseBioRedditSubmission(jobs, *elasticIndex, p,  &wg, filter, *exclude)
+	} else if *DocType == "bioreddit_comments" {
+		jobs := make(chan csvs.BioRedditComments)
+		go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg)
+		go consumers.ParseBioRedditComment(jobs, *elasticIndex, p, &wg, filter, *exclude)
 	} else {
 		panic("Unable to find valid document type")
 	}
 
+	jobs := make(chan string, 10000)
 	// Producer thread
 	if producer != nil {
 		wg.Add(1)
 		go producer(*DataPath, jobs, &wg)
-	}
 
-	filter := utils.CreateFilterMap(*filterFp)
-
-	// Consumers
-	for i := 0; i < *NumWorkers; i++ {
-		// fmt.Printf("Started Worker")
+		// Consumers
 		if consumer != nil {
-			go consumer(jobs, *elasticIndex, p, &wg, filter, *exclude)
-		}
+			for i := 0; i < *NumWorkers; i++ {
+				// fmt.Printf("Started Worker")
+				go consumer(jobs, *elasticIndex, p, &wg, filter, *exclude)
 
-		wg.Add(1)
+				wg.Add(1)
+			}
+		} else {
+			panic("No consumer created")
+		}
+	} else {
+		panic("No producer created")
 	}
 
 	wg.Wait()

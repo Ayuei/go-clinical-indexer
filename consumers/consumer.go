@@ -3,7 +3,9 @@ package consumers
 import (
 	"encoding/xml"
 	"github.com/olivere/elastic/v7"
-	"indexer/structs"
+	"indexer/structs/csvs"
+	"indexer/structs/text"
+	xml2 "indexer/structs/xml"
 	"indexer/utils"
 	"io/ioutil"
 	"strconv"
@@ -45,7 +47,7 @@ func ParseClinicalDocument(jobs chan string, index string, p *elastic.BulkProces
 				return
 			}
 
-			var study structs.ClinicalStudy
+			var study xml2.ClinicalStudy
 			f, err := ioutil.ReadFile(path)
 			utils.CheckError(err, "Open File: "+path)
 
@@ -76,7 +78,7 @@ func ParseTestClinicalDocument(jobs chan string, index string, p *elastic.BulkPr
 				return
 			}
 
-			var study structs.TestClinicalStudy
+			var study xml2.ClinicalStudyGuido
 			f, err := ioutil.ReadFile(path)
 			utils.CheckError(err, "Open File: "+path)
 
@@ -105,7 +107,7 @@ func ParsePubmed(jobs chan string, index string, p *elastic.BulkProcessor, wg *s
 				return
 			}
 
-			var study structs.PubMedArticle
+			var study xml2.PubMedArticle
 			f, err := ioutil.ReadFile(path)
 			utils.CheckError(err, "Open File: "+path)
 
@@ -131,14 +133,14 @@ func ParseMarcoDocument(jobs chan string, index string, p *elastic.BulkProcessor
 				return
 			}
 
-			var document structs.Marco
+			var document text.Marco
 			parsedRow := strings.Split(row, "\t")
 			Id, err := strconv.Atoi(parsedRow[0])
 
 			utils.CheckError(err, "Parse to int")
 
 			if checkFilter(parsedRow[0], filter, exclude) {
-				document = structs.Marco{
+				document = text.Marco{
 					Id:   Id,
 					Text: parsedRow[1],
 				}
@@ -146,6 +148,42 @@ func ParseMarcoDocument(jobs chan string, index string, p *elastic.BulkProcessor
 				rq := elastic.NewBulkIndexRequest().Index(index).Doc(document)
 				p.Add(rq)
 			}
+		}
+	}
+}
+
+func ParseBioRedditSubmission(jobs chan csvs.BioRedditSubmissions, index string, p *elastic.BulkProcessor, wg *sync.WaitGroup,
+	filter map[string]bool, exclude bool) {
+
+	defer wg.Done()
+
+	for {
+		select {
+		case document, hasMore := <-jobs:
+			if !hasMore {
+				return
+			}
+
+			rq := elastic.NewBulkIndexRequest().Index(index).Doc(document)
+			p.Add(rq)
+		}
+	}
+}
+
+func ParseBioRedditComment(jobs chan csvs.BioRedditComments, index string, p *elastic.BulkProcessor, wg *sync.WaitGroup,
+	filter map[string]bool, exclude bool) {
+
+	defer wg.Done()
+
+	for {
+		select {
+		case document, hasMore := <-jobs:
+			if !hasMore {
+				return
+			}
+
+			rq := elastic.NewBulkIndexRequest().Index(index).Doc(document)
+			p.Add(rq)
 		}
 	}
 }
