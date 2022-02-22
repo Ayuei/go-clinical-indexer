@@ -83,10 +83,10 @@ func main() {
 				wg.Add(1)
 			}
 		} else {
-			panic("No consumer created")
+			//panic("No consumer created")
 		}
 	} else {
-		panic("No producer created")
+		//panic("No producer created")
 	}
 
 	wg.Wait()
