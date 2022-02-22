@@ -102,29 +102,39 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 
 	for _, path := range glob {
 		utils.CheckError(err, "Open file")
-		f, err := os.Open(path)
+		//f, err := os.Open(path)
 
-		csvReader := csv.NewReader(f)
-		dec, err := csvutil.NewDecoder(csvReader)
+		csvReader, err := os.ReadFile(path)
+		//dec, err := csvutil.NewDecoder(csvReader)
 		utils.CheckError(err, "Decoding file")
 
-		for {
-			r := csvs.BioRedditSubmissions{}
 
-			if err := dec.Decode(&r); err == io.EOF {
-				break
-			} else if err != nil {
-				log.Fatal(err)
-			}
-
-			utils.CheckError(err, "Unmarshal")
-
-			fmt.Println(r)
-
-			jobs <- r
-			pbn.Add(1)
-
+		var records []csvs.BioRedditSubmissions
+		if err := csvutil.Unmarshal(csvReader, &records); err != nil {
+			fmt.Println("error:", err)
 		}
+
+		for _, u := range records {
+			fmt.Printf("%+v\n", u)
+		}
+
+		//r := csvs.BioRedditSubmissions{}
+
+		//if err := dec.Decode(&r); err == io.EOF {
+		//	break
+		//} else if err != nil {
+		//	log.Fatal(err)
+		//}
+
+		//utils.CheckError(err, "Unmarshal")
+
+		//fmt.Println(r)
+
+		//jobs <- r
+
+
+
+		pbn.Add(1)
 	}
 
 	close(jobs)
