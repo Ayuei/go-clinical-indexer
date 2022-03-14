@@ -94,12 +94,13 @@ func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitG
 
 	glob, err := filepath.Glob(dataPath + "/*")
 	fmt.Println("Found", len(glob), "files...")
-	pbn := pb.StartNew(len(glob))
 	utils.CheckError(err, "Glob")
 
 	if len(glob) == 0 {
 		panic("Producer is empty!")
 	}
+
+	counter := 0
 
 	for _, path := range glob {
 		f, err := os.Open(path)
@@ -109,21 +110,23 @@ func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitG
 		_, err = f.Seek(0, 0)
 		utils.CheckError(err, "File Seek")
 
-		r := bufio.NewReader(f)
+		inner_bar := pb.Start64(length)
 
+		r := bufio.NewReader(f)
 		s, e := utils.Readln(r)
 
 		for e == nil {
 			jobs <- s
 			s, e = utils.Readln(r)
+			inner_bar.Add(1)
 		}
 
-		pbn.Add(1)
+		inner_bar.Finish()
+		fmt.Printf("Finished %d out of %d.", counter, len(glob))
 	}
 
 	close(jobs)
 }
-
 
 func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSubmissions, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -144,7 +147,7 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 		_, err = f.Seek(0, 0)
 		utils.CheckError(err, "File Seek")
 
-		pbn := pb.StartNew(length)
+		pbn := pb.Start64(length)
 
 		csvReader := csv.NewReader(f)
 		dec, err := csvutil.NewDecoder(csvReader)
@@ -164,6 +167,7 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 			jobs <- r
 			pbn.Add(1)
 		}
+		pbn.Finish()
 	}
 
 	close(jobs)
@@ -206,5 +210,6 @@ func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditCommen
 		pbn.Add(1)
 	}
 
+	pbn.Finish()
 	close(jobs)
 }
