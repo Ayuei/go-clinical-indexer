@@ -22,7 +22,7 @@ func main() {
 	exclude := flag.Bool("excludeFilter", false, "Negate the filter option to exclude documents rather than include")
 	Delete := flag.Bool("delete", false, "Delete index if it exists")
 	DataPath := flag.String("data_path", ".", "Data collection location")
-	NumWorkers := flag.Int("workers", 8, "Number of parallel consumers")
+	NumWorkers := flag.Int("workers", 1, "Number of parallel consumers")
 
 	flag.Parse()
 
@@ -45,46 +45,38 @@ func main() {
 	var producer func(string, chan string, *sync.WaitGroup)
 	var consumer func(chan string, string, *elastic.BulkProcessor, *sync.WaitGroup, map[string]bool, bool)
 
-	if *DocType == "marco" {
-		producer = producers.ProduceMarco // ("collection.tsv", "med-msmarco-train.txt", jobs, &wg)
-		consumer = consumers.ParseMarcoDocument
-	} else if *DocType == "clinical-trials" {
-		producer = producers.ProduceClinicalTrials //("/home/vin/Projects/CDS_2021/index/raw_data/*/*.xml", jobs, &wg)
-		consumer = consumers.ParseClinicalDocument
-	} else if *DocType == "test-trials" {
-		producer = producers.ProduceTestClinicalTrials //("/home/vin/Projects/CDS_2021/index/raw_data/*/*.xml", jobs, &wg)
-		consumer = consumers.ParseTestClinicalDocument
-	} else if *DocType == "pubmed" {
-		producer = producers.GenericProducer
-		consumer = consumers.ParsePubmed
-	} else if *DocType == "bioreddit_submissions"{
-		jobs := make(chan csvs.BioRedditSubmissions)
-		wg.Add(1)
-		go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg)
-		for i := 0; i < *NumWorkers; i++ {
-			fmt.Printf("Started Worker")
-			go consumers.ParseBioRedditSubmission(jobs, *elasticIndex, p,  &wg, filter, *exclude)
+	producer, consumer = ProducerConsumerFactory(*DocType)
 
+	if producer == nil || consumer == nil {
+		if *DocType == "bioreddit_submissions" {
+			jobs := make(chan csvs.BioRedditSubmissions)
 			wg.Add(1)
-		}
-		wg.Wait()
-	} else if *DocType == "bioreddit_comments" {
-		jobs := make(chan csvs.BioRedditComments)
-		wg.Add(1)
-		go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg)
-		for i := 0; i < *NumWorkers; i++ {
-			fmt.Printf("Started Worker")
-			go consumers.ParseBioRedditComment(jobs, *elasticIndex, p, &wg, filter, *exclude)
+			go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg)
+			for i := 0; i < *NumWorkers; i++ {
+				fmt.Printf("Started Worker")
+				go consumers.ParseBioRedditSubmission(jobs, *elasticIndex, p, &wg, filter, *exclude)
 
+				wg.Add(1)
+			}
+			wg.Wait()
+		} else if *DocType == "bioreddit_comments" {
+			jobs := make(chan csvs.BioRedditComments)
 			wg.Add(1)
-		}
+			go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg)
+			for i := 0; i < *NumWorkers; i++ {
+				fmt.Printf("Started Worker")
+				go consumers.ParseBioRedditComment(jobs, *elasticIndex, p, &wg, filter, *exclude)
 
-		wg.Wait()
-	} else {
-		panic("Unable to find valid document type")
+				wg.Add(1)
+			}
+			wg.Wait()
+
+		} else {
+			panic("Unable to find valid document type")
+		}
 	}
 
-	jobs := make(chan string, 10000)
+	jobs := make(chan string, 1)
 	// Producer thread
 	if producer != nil {
 		wg.Add(1)
