@@ -36,7 +36,7 @@ func CreateFilterMap(filterFp string) map[string]bool {
 }
 
 func CheckError(err error, where string, raise ...bool) {
-	if err != nil && raise[0] == true {
+	if err != nil && len(raise) > 0 && raise[0] == true {
 		println(where)
 		panic(err)
 	}

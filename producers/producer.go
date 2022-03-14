@@ -195,6 +195,15 @@ func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditCommen
 		utils.CheckError(err, "Open file")
 		f, err := os.Open(path)
 
+		fs, err := f.Stat()
+
+		if fs.Size() < 10 {
+			pbn.Add(1)
+			continue
+		}
+
+		utils.CheckError(err, "File stats")
+
 		csvReader := csv.NewReader(f)
 		dec, err := csvutil.NewDecoder(csvReader)
 		utils.CheckError(err, "Decoding file")
@@ -209,8 +218,6 @@ func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditCommen
 			}
 
 			utils.CheckError(err, "Unmarshal")
-			fmt.Println(r)
-
 			jobs <- r
 		}
 		pbn.Add(1)
