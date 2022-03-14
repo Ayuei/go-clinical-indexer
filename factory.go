@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func ProducerConsumerFactory(DocType string) (func(string, chan string, *sync.WaitGroup), func(chan string, string, *elastic.BulkProcessor, *sync.WaitGroup, map[string]bool, bool)) {
+func ProducerConsumerFactory(DocType string) (func(string, chan string, *sync.WaitGroup, bool), func(chan string, string, *elastic.BulkProcessor, *sync.WaitGroup, map[string]bool, bool)) {
 	fmt.Println(DocType)
 	if DocType == "marco" {
 		return producers.ProduceMarco, consumers.ParseMarcoDocument // ("collection.tsv", "med-msmarco-train.txt", jobs, &wg) )

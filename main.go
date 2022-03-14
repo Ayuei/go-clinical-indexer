@@ -23,6 +23,7 @@ func main() {
 	Delete := flag.Bool("delete", false, "Delete index if it exists")
 	DataPath := flag.String("data_path", ".", "Data collection location")
 	NumWorkers := flag.Int("workers", 1, "Number of parallel consumers")
+	Accurate := flag.Bool("accurate", false, "Accurate progress bar, count lines before producing")
 
 	flag.Parse()
 
@@ -42,7 +43,7 @@ func main() {
 	filter := utils.CreateFilterMap(*filterFp)
 
 	var wg sync.WaitGroup
-	var producer func(string, chan string, *sync.WaitGroup)
+	var producer func(string, chan string, *sync.WaitGroup, bool)
 	var consumer func(chan string, string, *elastic.BulkProcessor, *sync.WaitGroup, map[string]bool, bool)
 
 	producer, consumer = ProducerConsumerFactory(*DocType)
@@ -51,7 +52,7 @@ func main() {
 		if *DocType == "bioreddit_submissions" {
 			jobs := make(chan csvs.BioRedditSubmissions)
 			wg.Add(1)
-			go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg)
+			go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg, *Accurate)
 			for i := 0; i < *NumWorkers; i++ {
 				fmt.Printf("Started Worker")
 				go consumers.ParseBioRedditSubmission(jobs, *elasticIndex, p, &wg, filter, *exclude)
@@ -62,7 +63,7 @@ func main() {
 		} else if *DocType == "bioreddit_comments" {
 			jobs := make(chan csvs.BioRedditComments)
 			wg.Add(1)
-			go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg)
+			go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg, *Accurate)
 			for i := 0; i < *NumWorkers; i++ {
 				fmt.Printf("Started Worker")
 				go consumers.ParseBioRedditComment(jobs, *elasticIndex, p, &wg, filter, *exclude)
@@ -80,7 +81,7 @@ func main() {
 	// Producer thread
 	if producer != nil {
 		wg.Add(1)
-		go producer(*DataPath, jobs, &wg)
+		go producer(*DataPath, jobs, &wg, *Accurate)
 
 		// Consumers
 		if consumer != nil {

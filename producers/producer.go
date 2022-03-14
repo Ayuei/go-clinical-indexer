@@ -15,7 +15,7 @@ import (
 	"sync"
 )
 
-func ProduceMarco(dataPath string, jobs chan string, wg *sync.WaitGroup) {
+func ProduceMarco(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
 	defer wg.Done()
 
 	readFile, err := os.Open(dataPath + "/collection.tsv")
@@ -39,7 +39,7 @@ func ProduceMarco(dataPath string, jobs chan string, wg *sync.WaitGroup) {
 	utils.CheckError(err, "Unable to close file")
 }
 
-func ProduceClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup) {
+func ProduceClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*/*.xml")
@@ -53,7 +53,7 @@ func ProduceClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup
 	close(jobs)
 }
 
-func ProduceTestClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup) {
+func ProduceTestClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*/*.xml")
@@ -67,7 +67,7 @@ func ProduceTestClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitG
 	close(jobs)
 }
 
-func GenericProducer(dataPath string, jobs chan string, wg *sync.WaitGroup) {
+func GenericProducer(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
 	defer wg.Done()
 
 	//glob, err := filepath.Glob(globString)
@@ -88,7 +88,7 @@ func GenericProducer(dataPath string, jobs chan string, wg *sync.WaitGroup) {
 	close(jobs)
 }
 
-func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitGroup) {
+func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
 	defer wg.Done()
 	fmt.Println("Started producer")
 
@@ -105,10 +105,15 @@ func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitG
 	for _, path := range glob {
 		f, err := os.Open(path)
 		utils.CheckError(err, "Reading File, Generic Line Producer")
-		length, err := utils.LineCounter(f)
-		utils.CheckError(err, "Open file")
-		_, err = f.Seek(0, 0)
-		utils.CheckError(err, "File Seek")
+
+		length := int64(350000)
+
+		if accurate {
+			length, err = utils.LineCounter(f)
+			utils.CheckError(err, "Open file")
+			_, err = f.Seek(0, 0)
+			utils.CheckError(err, "File Seek")
+		}
 
 		inner_bar := pb.Start64(length)
 
@@ -122,13 +127,14 @@ func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitG
 		}
 
 		inner_bar.Finish()
+		counter += 1
 		fmt.Printf("Finished %d out of %d.", counter, len(glob))
 	}
 
 	close(jobs)
 }
 
-func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSubmissions, wg *sync.WaitGroup) {
+func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSubmissions, wg *sync.WaitGroup, accurate bool) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*.csv*")
@@ -173,7 +179,7 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 	close(jobs)
 }
 
-func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditComments, wg *sync.WaitGroup) {
+func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditComments, wg *sync.WaitGroup, accurate bool) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*.csv")
