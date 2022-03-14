@@ -104,6 +104,10 @@ func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitG
 	for _, path := range glob {
 		f, err := os.Open(path)
 		utils.CheckError(err, "Reading File, Generic Line Producer")
+		length, err := utils.LineCounter(f)
+		utils.CheckError(err, "Open file")
+		_, err = f.Seek(0, 0)
+		utils.CheckError(err, "File Seek")
 
 		r := bufio.NewReader(f)
 
@@ -120,12 +124,12 @@ func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitG
 	close(jobs)
 }
 
+
 func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSubmissions, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*.csv*")
 	fmt.Println("Found", len(glob), "files...")
-	pbn := pb.StartNew(len(glob))
 	utils.CheckError(err, "Glob")
 
 	if len(glob) == 0 {
@@ -133,38 +137,33 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 	}
 
 	for _, path := range glob {
+		f, err := os.Open(path)
 		utils.CheckError(err, "Open file")
-		//f, err := os.Open(path)
+		length, err := utils.LineCounter(f)
+		utils.CheckError(err, "Open file")
+		_, err = f.Seek(0, 0)
+		utils.CheckError(err, "File Seek")
 
-		csvReader, err := os.ReadFile(path)
-		//dec, err := csvutil.NewDecoder(csvReader)
+		pbn := pb.StartNew(length)
+
+		csvReader := csv.NewReader(f)
+		dec, err := csvutil.NewDecoder(csvReader)
 		utils.CheckError(err, "Decoding file")
 
-		var records []csvs.BioRedditSubmissions
-		if err := csvutil.Unmarshal(csvReader, &records); err != nil {
-			fmt.Println("error:", err)
-		}
+		for {
+			r := csvs.BioRedditSubmissions{}
 
-		for _, r := range records {
-			fmt.Printf("%+v\n", r)
+			if err := dec.Decode(&r); err == io.EOF {
+				break
+			} else if err != nil {
+				log.Fatal(err)
+			}
+
+			utils.CheckError(err, "Unmarshal")
+
 			jobs <- r
+			pbn.Add(1)
 		}
-
-		//r := csvs.BioRedditSubmissions{}
-
-		//if err := dec.Decode(&r); err == io.EOF {
-		//	break
-		//} else if err != nil {
-		//	log.Fatal(err)
-		//}
-
-		//utils.CheckError(err, "Unmarshal")
-
-		//fmt.Println(r)
-
-		//jobs <- r
-
-		pbn.Add(1)
 	}
 
 	close(jobs)
@@ -200,12 +199,11 @@ func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditCommen
 			}
 
 			utils.CheckError(err, "Unmarshal")
-
 			fmt.Println(r)
 
 			jobs <- r
-			pbn.Add(1)
 		}
+		pbn.Add(1)
 	}
 
 	close(jobs)
