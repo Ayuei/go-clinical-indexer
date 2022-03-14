@@ -85,7 +85,7 @@ type BioRedditComments struct {
 	Total_awards_received    int         `csv:"total_awards_received,omitempty"`
 	Subreddit                string      `csv:"subreddit,omitempty"`
 	Author_flair_template_id string      `csv:"author_flair_template_id,omitempty"`
-	Likes                    int         `csv:"likes,omitempty"`
+	Likes                    interface{} `csv:"likes,omitempty"`
 	User_reports             string      `csv:"user_reports,omitempty"`
 	Id                       string      `csv:"id,omitempty"`
 	Banned_at_utc            float64     `csv:"banned_at_utc,omitempty"`
