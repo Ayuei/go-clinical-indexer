@@ -15,7 +15,7 @@ import (
 	"sync"
 )
 
-func ProduceMarco(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
+func ProduceMarco(dataPath string, jobs chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	readFile, err := os.Open(dataPath + "/collection.tsv")
@@ -39,7 +39,7 @@ func ProduceMarco(dataPath string, jobs chan string, wg *sync.WaitGroup, accurat
 	utils.CheckError(err, "Unable to close file")
 }
 
-func ProduceClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
+func ProduceClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*/*.xml")
@@ -53,7 +53,7 @@ func ProduceClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup
 	close(jobs)
 }
 
-func ProduceTestClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
+func ProduceTestClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*/*.xml")
@@ -67,7 +67,7 @@ func ProduceTestClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitG
 	close(jobs)
 }
 
-func GenericProducer(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
+func GenericProducer(dataPath string, jobs chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	//glob, err := filepath.Glob(globString)
@@ -88,56 +88,7 @@ func GenericProducer(dataPath string, jobs chan string, wg *sync.WaitGroup, accu
 	close(jobs)
 }
 
-func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
-	defer wg.Done()
-	fmt.Println("Started producer")
-
-	glob, err := filepath.Glob(dataPath + "/*")
-	fmt.Println("Found", len(glob), "files...")
-	utils.CheckError(err, "Glob")
-	length := int64(31050107)
-	bar := pb.Start64(length)
-	//skipto := 20000000
-
-	if len(glob) == 0 {
-		panic("Producer is empty!")
-	}
-
-	counter := 0
-
-	for _, path := range glob {
-		f, err := os.Open(path)
-		utils.CheckError(err, "Reading File, Generic Line Producer")
-
-
-		if accurate {
-			length, err = utils.LineCounter(f)
-			utils.CheckError(err, "Open file")
-			_, err = f.Seek(0, 0)
-			utils.CheckError(err, "File Seek")
-		}
-
-
-		r := bufio.NewReader(f)
-		s, e := utils.Readln(r)
-
-		for e == nil {
-			//if counter >= skipto {
-			//}
-			jobs <- s
-			s, e = utils.Readln(r)
-			bar.Add(1)
-			counter += 1
-		}
-
-		//fmt.Printf("Finished %d out of %d.", counter, len(glob))
-	}
-	bar.Finish()
-
-	close(jobs)
-}
-
-func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSubmissions, wg *sync.WaitGroup, accurate bool) {
+func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSubmissions, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*.csv*")
@@ -156,7 +107,7 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 		_, err = f.Seek(0, 0)
 		utils.CheckError(err, "File Seek")
 
-		pbn := pb.Start64(length)
+		pbn := pb.StartNew(length)
 
 		csvReader := csv.NewReader(f)
 		dec, err := csvutil.NewDecoder(csvReader)
@@ -176,13 +127,12 @@ func BioredditSubmissionCSVProducer(dataPath string, jobs chan csvs.BioRedditSub
 			jobs <- r
 			pbn.Add(1)
 		}
-		pbn.Finish()
 	}
 
 	close(jobs)
 }
 
-func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditComments, wg *sync.WaitGroup, accurate bool) {
+func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditComments, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	glob, err := filepath.Glob(dataPath + "/*.csv")
@@ -198,15 +148,6 @@ func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditCommen
 		utils.CheckError(err, "Open file")
 		f, err := os.Open(path)
 
-		fs, err := f.Stat()
-
-		if fs.Size() < 10 {
-			pbn.Add(1)
-			continue
-		}
-
-		utils.CheckError(err, "File stats")
-
 		csvReader := csv.NewReader(f)
 		dec, err := csvutil.NewDecoder(csvReader)
 		utils.CheckError(err, "Decoding file")
@@ -221,11 +162,12 @@ func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditCommen
 			}
 
 			utils.CheckError(err, "Unmarshal")
+			fmt.Println(r)
+
 			jobs <- r
 		}
 		pbn.Add(1)
 	}
 
-	pbn.Finish()
 	close(jobs)
 }

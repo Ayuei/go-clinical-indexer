@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"github.com/olivere/elastic/v7"
 	"indexer/consumers"
 	"indexer/producers"
@@ -35,6 +34,8 @@ func main() {
 	p, err := client.BulkProcessor().
 		Name("Indexer-1").
 		Workers(*NumWorkers).
+		BulkActions(1000).               // # of queued requests before committed
+		BulkSize(65536).
 		Do(context.Background())
 
 	utils.CheckError(err, "bulk")
@@ -54,7 +55,6 @@ func main() {
 			wg.Add(1)
 			go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg, *Accurate)
 			for i := 0; i < *NumWorkers; i++ {
-				fmt.Printf("Started Worker")
 				go consumers.ParseBioRedditSubmission(jobs, *elasticIndex, p, &wg, filter, *exclude)
 
 				wg.Add(1)
@@ -65,7 +65,7 @@ func main() {
 			wg.Add(1)
 			go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg, *Accurate)
 			for i := 0; i < *NumWorkers; i++ {
-				fmt.Printf("Started Worker")
+				//fmt.Printf("Started Worker")
 				go consumers.ParseBioRedditComment(jobs, *elasticIndex, p, &wg, filter, *exclude)
 
 				wg.Add(1)
