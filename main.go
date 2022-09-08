@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/olivere/elastic/v7"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esutil"
 	"indexer/consumers"
 	"indexer/producers"
 	"indexer/structs/csvs"
@@ -11,6 +12,21 @@ import (
 	"strconv"
 	"sync"
 )
+
+func checkArgs(elasticIndex string, DataPath string, NumWorkers int) {
+
+	if len(elasticIndex) == 0 {
+		panic("Index not specified! Use -h flag to discover options.")
+	}
+
+	if len(DataPath) == 0 {
+		panic("Data path not specified! Use -h flag to discover options.")
+	}
+
+	if NumWorkers <= 0 {
+		panic("Invalid number of workers specified! Use -h flag to discover options.")
+	}
+}
 
 func main() {
 	elasticUrl := flag.String("url", "http://127.0.0.1", "Elasticsearch URL endpoint")
@@ -26,17 +42,21 @@ func main() {
 
 	flag.Parse()
 
-	client, err := elastic.NewClient(
-		elastic.SetURL(*elasticUrl + ":" + strconv.Itoa(*elasticPort)))
+	checkArgs(*elasticIndex, *DataPath, *NumWorkers)
+
+	client, err := elasticsearch.NewClient(elasticsearch.Config{
+		Addresses: []string{*elasticUrl + ":" + strconv.Itoa(*elasticPort)},
+	})
 
 	utils.CheckError(err, "client")
 
-	p, err := client.BulkProcessor().
-		Name("Indexer-1").
-		Workers(*NumWorkers).
-		BulkActions(1000).               // # of queued requests before committed
-		BulkSize(65536).
-		Do(context.Background())
+	p, err := esutil.NewBulkIndexer(
+		esutil.BulkIndexerConfig{
+			NumWorkers: *NumWorkers,
+			FlushBytes: 65536,
+			Client:     client,
+			Index:      *elasticIndex,
+		})
 
 	utils.CheckError(err, "bulk")
 	CreateIndexIfNotExists(client, *elasticIndex, *Delete)
@@ -45,7 +65,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	var producer func(string, chan string, *sync.WaitGroup, bool)
-	var consumer func(chan string, string, *elastic.BulkProcessor, *sync.WaitGroup, map[string]bool, bool)
+	var consumer func(chan string, esutil.BulkIndexer, *sync.WaitGroup, map[string]bool, bool)
 
 	producer, consumer = ProducerConsumerFactory(*DocType)
 
@@ -55,7 +75,7 @@ func main() {
 			wg.Add(1)
 			go producers.BioredditSubmissionCSVProducer(*DataPath, jobs, &wg, *Accurate)
 			for i := 0; i < *NumWorkers; i++ {
-				go consumers.ParseBioRedditSubmission(jobs, *elasticIndex, p, &wg, filter, *exclude)
+				go consumers.ParseBioRedditSubmission(jobs, p, &wg, filter, *exclude)
 
 				wg.Add(1)
 			}
@@ -66,7 +86,7 @@ func main() {
 			go producers.BioredditCommentCSVProducer(*DataPath, jobs, &wg, *Accurate)
 			for i := 0; i < *NumWorkers; i++ {
 				//fmt.Printf("Started Worker")
-				go consumers.ParseBioRedditComment(jobs, *elasticIndex, p, &wg, filter, *exclude)
+				go consumers.ParseBioRedditComment(jobs, p, &wg, filter, *exclude)
 
 				wg.Add(1)
 			}
@@ -87,7 +107,7 @@ func main() {
 		if consumer != nil {
 			for i := 0; i < *NumWorkers; i++ {
 				// fmt.Printf("Started Worker")
-				go consumer(jobs, *elasticIndex, p, &wg, filter, *exclude)
+				go consumer(jobs, p, &wg, filter, *exclude)
 
 				wg.Add(1)
 			}
@@ -100,8 +120,7 @@ func main() {
 
 	wg.Wait()
 
-	err = p.Flush()
 	utils.CheckError(err, "flush")
-	err = p.Close()
+	err = p.Close(context.Background())
 	utils.CheckError(err, "flush")
 }

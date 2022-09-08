@@ -18,15 +18,28 @@ import (
 func ProduceMarco(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
 	defer wg.Done()
 
-	readFile, err := os.Open(dataPath + "/collection.tsv")
+	var counter int64
+	var readFile *os.File
 
-	if err != nil {
-		log.Fatalf("failed to open file: %s", err)
+	if accurate {
+		var err error
+		readFile, err = os.Open(dataPath)
+		utils.CheckError(err, "Unable to read file")
+
+		fileScanner := bufio.NewScanner(readFile)
+		fileScanner.Split(bufio.ScanLines)
+		counter, err = utils.LineCounter(readFile)
+
+		utils.CheckError(err, "Unable to read file")
+	} else {
+		counter = 1e9
 	}
 
+	pbn := pb.Start64(counter)
+
+	readFile, _ = os.Open(dataPath)
 	fileScanner := bufio.NewScanner(readFile)
 	fileScanner.Split(bufio.ScanLines)
-	pbn := pb.StartNew(8841823)
 
 	for fileScanner.Scan() {
 		row := fileScanner.Text()
@@ -34,9 +47,7 @@ func ProduceMarco(dataPath string, jobs chan string, wg *sync.WaitGroup, accurat
 		pbn.Add(1)
 	}
 
-	err = readFile.Close()
 	close(jobs)
-	utils.CheckError(err, "Unable to close file")
 }
 
 func ProduceClinicalTrials(dataPath string, jobs chan string, wg *sync.WaitGroup, accurate bool) {
@@ -71,7 +82,7 @@ func GenericProducer(dataPath string, jobs chan string, wg *sync.WaitGroup, accu
 	defer wg.Done()
 
 	//glob, err := filepath.Glob(globString)
-	glob, err := filepath.Glob(dataPath + "/*/*")
+	glob, err := filepath.Glob(dataPath + "*")
 	fmt.Println("Found", len(glob), "files...")
 	pbn := pb.StartNew(len(glob))
 	utils.CheckError(err, "Glob")
@@ -109,14 +120,12 @@ func GenericLineReaderProducer(dataPath string, jobs chan string, wg *sync.WaitG
 		f, err := os.Open(path)
 		utils.CheckError(err, "Reading File, Generic Line Producer")
 
-
 		if accurate {
 			length, err = utils.LineCounter(f)
 			utils.CheckError(err, "Open file")
 			_, err = f.Seek(0, 0)
 			utils.CheckError(err, "File Seek")
 		}
-
 
 		r := bufio.NewReader(f)
 		s, e := utils.Readln(r)
@@ -198,12 +207,12 @@ func BioredditCommentCSVProducer(dataPath string, jobs chan csvs.BioRedditCommen
 		utils.CheckError(err, "Open file")
 		f, err := os.Open(path)
 
-		fs, err := f.Stat()
+		//fs, err := f.Stat()
 
-		if fs.Size() < 10 {
-			pbn.Add(1)
-			continue
-		}
+		//if fs.Size() < 10 {
+		//	pbn.Add(1)
+		//	continue
+		//}
 
 		utils.CheckError(err, "File stats")
 
